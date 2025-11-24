@@ -1,4 +1,4 @@
-function doPost(e) {
+function doPost(e) { 
   const ss = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1MwuY9TvqVSlBVMCYO2LZfuLeksIO9rOTZwZM3lfT4qs/edit');
   const sh = ss.getSheetByName('REG');
 
