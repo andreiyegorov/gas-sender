@@ -8,7 +8,7 @@
  * 1. КОНСТАНТЫ (метка, имена листов)
  * ─────────────────────────────────────────────────────
  */
-var INVITE_LABEL_NAME = 'sender_invite_done';
+var INVITE_LABEL_NAME = 'sender_fetcher_newlinks';
 var LINKS_SHEET_NAME = 'Links';
 var LOG_SHEET_NAME = 'received-log';
 
@@ -164,91 +164,46 @@ function senderInvite_(source) {
 
 
 
-        /* ─────────────────────────────────────────────
- * 3.9 обработка CSV с учётом правил:
- *  • первый раз → записываем в Links и в лог
- *  • повтор с тем же содержанием → полностью пропускаем
- *  • повтор, но появились новые userId → добавляем их и логируем ✅🟡
- * критерий «тот же файл»:
- *  • совпадает filename
- *  • совпадает набор userId/password
- *  • дата письма не позже первой регистрации
- * ─────────────────────────────────────────────
- */
-var added = 0;
+     /* ─────────────────────────────────────────────
+   * 3.9 запись данных в Links
+   *     — порядок колонок:
+   *       1) Email TS (дата письма)
+   *       2) Check TS (дата проверки)
+   *       3) Group Name
+   *       4) User ID
+   *       5) Password
+   *     — добавляем только строки, где есть:
+   *       • User ID
+   *       • Password
+   *     — не добавляем дубликаты по User ID
+   *     — порядок строк внутри CSV: по убыванию
+   *     — новые строки вставляются под заголовок (в строку 2)
+   * ─────────────────────────────────────────────
+   */
+  var added = 0;
 
-// собираем все userId/password из CSV
-var csvPairs = [];
-for (var r = 1; r < csv.length; r++) {
-  var userId = (csv[r][0] || '').toString().trim();
-  var password = (csv[r][1] || '').toString().trim();
-  if (userId && password) {
-    csvPairs.push(userId + '::' + password);
-  }
-}
+  for (var r2 = csv.length - 1; r2 >= 1; r2--) {
 
-// ищем первую запись этого файла в логе
-var prevEntry = logSheet.createTextFinder(filename)
-  .matchCase(false)
-  .findNext();
+    var u2 = (csv[r2][0] || '').toString().trim();
+    var p2 = (csv[r2][1] || '').toString().trim();
+    var g2 = (csv[r2][2] || '').toString().trim();
 
-if (prevEntry) {
-  // была регистрация — извлекаем дату письма
-  var firstSeen = logSheet.getRange(prevEntry.getRow(), 1).getValue();
+    if (!u2 || !p2) continue;
 
-  // если дата письма НЕ позже и набор тот же — выходим
-  var sameContent = true;
-  for (var i = 1; i < csv.length; i++) {
-    var u = (csv[i][0] || '').toString().trim();
-    var p = (csv[i][1] || '').toString().trim();
-    if (!u || !p) continue;
-    if (!csvPairs.includes(u + '::' + p)) {
-      sameContent = false;
-      break;
+    var exists = sheetLinks.createTextFinder(u2).matchCase(false).findNext();
+
+    if (!exists) {
+      sheetLinks.insertRowBefore(2);
+      sheetLinks.getRange(2,1,1,5).setValues([[
+        dateStr,   // Email TS
+        nowStr,    // Check TS
+        g2,
+        u2,
+        p2
+      ]]);
+      added++;
     }
   }
-
-  if (dateStr <= firstSeen && sameContent) {
-    continue; // полностью пропускаем
-  }
-}
-
-// если дошли сюда — либо первый раз, либо есть новые ID
-for (var r2 = 1; r2 < csv.length; r2++) {
-  var u2 = (csv[r2][0] || '').toString().trim();
-  var p2 = (csv[r2][1] || '').toString().trim();
-  var g2 = (csv[r2][2] || '').toString().trim();
-
-  if (!u2 || !p2) continue;
-
-  var exists = sheetLinks.createTextFinder(u2).matchCase(false).findNext();
-  if (!exists) {
-    sheetLinks.appendRow([
-      dateStr, // Email TS
-      nowStr,  // Check TS
-      g2,
-      u2,
-      p2
-    ]);
-    added++;
-  }
-}
-
-// логируем только если:
-// • первый раз
-// • или появились новые ID
-if (added > 0) {
-  var statusText = prevEntry ? '✅🟡 old csv with new links' : '✅ received';
-  logSheet.insertRowBefore(2);
-  logSheet.getRange(2,1,1,6).setValues([[
-    nowStr,
-    source,
-    filename,
-    added,
-    statusText,
-    ''
-  ]]);
-}
 
 
 
