@@ -23,10 +23,9 @@ function senderPostmanCheck() {
   senderPostman_('menu-check');
 }
 
-function senderPostmanTrigger() {
+function senderPostmanAuto() {
   senderPostman_('trigger');
 }
-
 /*******************
  * 3. ОСНОВНАЯ ФУНКЦИЯ
  *******************/

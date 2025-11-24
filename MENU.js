@@ -1,16 +1,14 @@
 /*******************************************************
- *  📨 SENDER POSTMAN — MENU
- *  📅 Версия: 2025-11 
- *  Файл: MENU.js
+ *  📨 SENDER POSTMAN — MENU (simple working)
+ *  Версия: 2025-11 18.05
  *******************************************************/
 
-/* 1. onOpen — создаёт меню */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   const menu = ui.createMenu('📨 Sender Postman');
 
   menu.addItem('🚀 Отправить новые отчёты', 'senderPostmanRun');
-  menu.addItem('🔍 Проверить новые отчёты (без отправки)', 'senderPostmanCheck');
+  menu.addItem('🔍 Проверить новые отчёты', 'senderPostmanCheck');
   menu.addItem('🔗 Проверить новые ссылки (CSV)', 'senderFetcherCheck');
 
   menu.addSeparator();
@@ -21,7 +19,7 @@ function onOpen() {
   menu.addToUi();
 }
 
-/* 2. openSenderLog */
+/* открытие логов */
 function openSenderLog() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sh = ss.getSheetByName('sender-log');
@@ -34,7 +32,6 @@ function openSenderLog() {
   }
 }
 
-/* 3. openReceivedLog */
 function openReceivedLog() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sh = ss.getSheetByName('received-log');
@@ -47,7 +44,7 @@ function openReceivedLog() {
   }
 }
 
-/* 4. senderFetcherCheck — вызов Fetcher */
+/* вызов Fetcher */
 function senderFetcherCheck() {
   senderFetcher_('menu-check');
 }

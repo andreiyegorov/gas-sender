@@ -1,17 +1,17 @@
 function createSenderPostmanTrigger() {
 
-  // удаляем старые триггеры, если есть
+  // удалить старые триггеры на авто-функцию
   ScriptApp.getProjectTriggers().forEach(tr => {
-    if (tr.getHandlerFunction() === 'senderPostmanTrigger') {
+    if (tr.getHandlerFunction() === 'senderPostmanAuto') {
       ScriptApp.deleteTrigger(tr);
     }
   });
 
-  // создаём новый
-  ScriptApp.newTrigger('senderPostmanTrigger')
+  // создать новый — каждые 30 минут
+  ScriptApp.newTrigger('senderPostmanAuto')
     .timeBased()
     .everyMinutes(30)
     .create();
 
-  SpreadsheetApp.getUi().alert('✅ Триггер создан: каждые 30 минут.');
+  SpreadsheetApp.getUi().alert('✅ Авто-триггер создан: каждые 30 минут.');
 }
