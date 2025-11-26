@@ -1,12 +1,15 @@
 /*******************************************************
  *  📨 POSTMAN (sender)
- *  Обновлено: name ae 24.11.25 16:23
+ *  Версия: 2611-2130 (26 ноября 21:30)
+ *  Изменения:
+ *    • Email берётся из именованного диапазона 'email_to_send'
+ *    • Timestamp: dd.MM  HH:mm (без года, два пробела)
  *******************************************************/
 
 var SHEET_ID   = SpreadsheetApp.getActive().getId();
 var REG_SHEET  = 'REG';
 var ID_COL     = 2;   // колонка B
-var EMAIL_COL  = 4;   // колонка D
+// EMAIL берётся из именованного диапазона 'email_to_send'
 var LABEL_NAME = 'sender_postman_done';
 var BCC_EMAIL  = 'goldensequence@proton.me';
 
@@ -60,7 +63,7 @@ function senderPostman_(source) {
 
   var tz = Session.getScriptTimeZone();
   var nowDate = new Date();
-  var nowStr = Utilities.formatDate(nowDate, tz, 'dd.MM.yyyy HH:mm');
+  var nowStr = Utilities.formatDate(nowDate, tz, 'dd.MM  HH:mm');
 
   for (var t = 0; t < threads.length; t++) {
 
@@ -87,7 +90,10 @@ function senderPostman_(source) {
       var row = reg.findIndex(function(r){ return (r[ID_COL-1]||'').toString().trim() === id; });
       if (row === -1) continue;
 
-      var email = (reg[row][EMAIL_COL-1] || '').toString().trim();
+      // email из именованного диапазона
+      var emailRange = ss.getRangeByName('email_to_send');
+      var emailCol = emailRange ? emailRange.getColumn() : 4;
+      var email = (reg[row][emailCol-1] || '').toString().trim();
       if (!email) email = 'yegorov@me.com';
 
       try {
@@ -144,8 +150,13 @@ function senderPostman_(source) {
   }
 
   // обновить панель статусов (автомат)
-updateSenderAutoStatusPanel_(globalThis.__idsSent, nowDate);
-globalThis.__idsSent = [];
+  updateSenderAutoStatusPanel_(globalThis.__idsSent, nowDate);
+  
+  // обновить Dashboard
+  updateDashboardLastSent_(globalThis.__idsSent, nowDate);
+  updateDashboardAutoStatus_(nowDate);
+  
+  globalThis.__idsSent = [];
 }
 
 /*******************
@@ -164,4 +175,12 @@ function renameSenderFiles_(atts, id) {
     out.push(atts[i].copyBlob().setName(n));
   }
   return out;
+}
+
+/*******************
+ * 5. АВТО-ТРИГГЕР (каждые 30 мин)
+ *******************/
+function autoCheck30min() {
+  senderInviteCheck();       // 1. Проверить новые CSV-ссылки
+  senderPostman_('trigger'); // 2. Отправить отчёты
 }

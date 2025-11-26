@@ -1,3 +1,9 @@
+/*******************************************************
+ *  🔗 LINK REGISTRATOR — Web App для Tampermonkey
+ *  📅 Версия: 2711-0505 (27 ноября 05:05)
+ *  📘 Назначение:
+ *     Принимает POST от Tampermonkey и записывает в REG
+ *******************************************************/
 function doPost(e) { 
   const ss = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1MwuY9TvqVSlBVMCYO2LZfuLeksIO9rOTZwZM3lfT4qs/edit');
   const sh = ss.getSheetByName('REG');
